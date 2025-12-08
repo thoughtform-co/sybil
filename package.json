@@ -1,0 +1,34 @@
+{
+  "name": "sibyl",
+  "version": "1.0.0",
+  "description": "An oracle for the domestic mundane—reads calendars and tasks, delivers via WhatsApp",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "trigger": "tsx src/cli/trigger.ts",
+    "trigger:summary": "tsx src/cli/trigger.ts --summary",
+    "preview": "tsx src/cli/trigger.ts --dry-run",
+    "preview:summary": "tsx src/cli/trigger.ts --dry-run --summary"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@hono/node-server": "^1.13.7",
+    "googleapis": "^144.0.0",
+    "hono": "^4.6.12",
+    "node-cron": "^3.0.3",
+    "twilio": "^5.3.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

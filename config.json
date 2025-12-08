@@ -1,0 +1,15 @@
+{
+  "todoist": {
+    "include_projects": [],
+    "exclude_projects": [],
+    "min_priority": 4,
+    "include_labels": ["Quellin"],
+    "include_overdue": true
+  },
+  "calendar": {
+    "include_calendars": ["primary"],
+    "exclude_calendars": ["Holidays"],
+    "days_ahead": 7
+  }
+}
+
