@@ -1,0 +1,55 @@
+---
+description: Supply-chain defense rule. Forces scan-first behavior before any npm/pnpm/yarn/bun install, blocks pull_request_target and shared publish cache, and enforces release-age cooldowns on dependency changes.
+globs:
+alwaysApply: true
+---
+
+# npm Supply-Chain Defense (Repo Rule)
+
+This repo participates in the `npm-supply-chain-defense` skill. The agent must follow these rules before any dependency or workflow change.
+
+## Hard Rules
+
+1. **Never run `npm install`, `npm update`, `npm audit fix`, `npx`, `pnpx`, `bunx`, or any package-manager install command on the user's machine** without confirming:
+   - `package.json` has a pinned `packageManager` field, **and**
+   - `.npmrc` / `pnpm-workspace.yaml` / `bunfig.toml` / `.yarnrc.yml` declares a release-age cooldown (`minimum-release-age >= 10080` or equivalent), **and**
+   - `ignore-scripts=true` is set or the user has explicitly approved running lifecycle scripts for this change.
+2. **Never introduce a `pull_request_target` workflow** in this repo.
+3. **Never restore a cache in the publish workflow that was written by a PR/test/fork workflow.** Publish jobs install fresh.
+4. **Never grant `id-token: write` at the workflow level.** Scope it to the specific publish job that needs OIDC.
+5. **Never pin a third-party GitHub Action to a tag (`@v1`, `@main`).** Pin to a full commit SHA.
+6. **Never remove `--ignore-scripts` or `--allow-git=none`** from install commands without surfacing the change to the user.
+7. **Never edit cooldown settings to be shorter than the repo baseline** without an explicit, justified user request and a note in `SECURITY-SUPPLY-CHAIN.md`.
+
+## Scan-First Workflow
+
+When the user asks about a published supply-chain incident, or any dependency change involving a newly-released package:
+
+1. Load the `npm-supply-chain-defense` skill if not already in context.
+2. Run `pwsh -NoProfile -File <path-to-skill>/scripts/scan-repos.ps1 -Roots .` against this repo.
+3. Report manifest hits, fingerprint hits, and workflow signals before proposing changes.
+4. If clean: proceed with hardening at the repo baseline (Baseline A/B/C in skill SKILL.md).
+5. If hits found: follow PLAYBOOKS.md Red Path. Do not rotate tokens before confirming host IoCs.
+
+## Allowed Commands
+
+- `npm ci --ignore-scripts --allow-git=none`
+- `pnpm install --frozen-lockfile`
+- `yarn install --immutable`
+- `bun install --frozen-lockfile`
+- Any read-only `npm view`, `npm config get`, `pnpm list`, `git ls-files`.
+
+## Forbidden Without Confirmation
+
+- `npm install <pkg>` (mutates lockfile, may pull a fresh malicious version)
+- `npm audit fix` (mutates lockfile, may upgrade past cooldown)
+- `npx <pkg>` (executes a remote package)
+- `npm publish` (release pipeline)
+- Any `curl | sh` install from an unpinned URL
+
+## Reference
+
+- Skill SKILL.md (root rules, baselines, CI hardening)
+- Skill PLAYBOOKS.md (red/green incident playbooks)
+- Skill scripts/scan-repos.ps1, scripts/ioc-host.ps1
+- Skill scripts/advisory.json (current advisory dataset)
